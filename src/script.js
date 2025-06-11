@@ -209,9 +209,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 autoDeactivatedFolder = searchParts.find(part => (part.startsWith('.') && part.length > 1) || (part.startsWith('__') && part.length > 2));
                 if (autoDeactivatedFolder) autoDeactivatedFolders.add(autoDeactivatedFolder);
             }
+            
+            const lowerPath = originalPath.toLowerCase();
+            const binaryExts = [
+                '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.exe', '.dll', '.so', '.dylib', '.bin', '.app', '.msi', '.deb', '.rpm',
+                '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp', '.ico',
+                '.mp3', '.wav', '.aac', '.ogg', '.flac',
+                '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.flv',
+                '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                '.iso', '.img', '.dmg'
+            ];
+            let isBinary = binaryExts.some(ext => lowerPath.endsWith(ext));
+            if (isBinary) {
+                isSkipped = true;
+                isDotOrUnderscoreFolder = false;
+            }
             return {
                 file: file,
-                isActive: !(isSkipped || isDotOrUnderscoreFolder),
+                isActive: !(isSkipped || isDotOrUnderscoreFolder || isBinary),
                 id: `project-file-${index}`,
                 originalPath: originalPath,
                 cleanedTextContent: null,
