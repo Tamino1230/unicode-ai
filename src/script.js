@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fileCount !== null && !charactersFound && totalRemoved === 0) {
             statsOutput.appendChild(document.createTextNode('No targeted Unicode characters found or removed in active files.'));
         } else if (fileCount === null && !charactersFound) {
-            statsOutput.innerHTML = '<p class="placeholder-text">No targeted Unicode characters found or removed.</p>';
+            statsOutput.innerHTML = '<p class="placeholder-text">No targeted Unicode characters found or removed. Warning: You should Copy the end Product either way. Because some Unicharacters Automaticle get changed when Uploaded! For Example: —.</p>';
         } else {
             const pTotal = document.createElement('p');
             if (totalRemoved > 0) {

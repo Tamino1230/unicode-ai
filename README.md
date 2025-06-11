@@ -1,6 +1,6 @@
 # Unicode-AI
 
-Unicode-AI is a modern, privacy-friendly Unicode cleaner for text and code files. It helps you remove invisible, zero-width, and other problematic Unicode characters that can cause issues in code, documents, and projects. The app is fully client-side and works in your browser—no data is sent anywhere.
+Unicode-AI is a modern, privacy-friendly Unicode cleaner for text and code files. It helps you remove invisible, zero-width, and other problematic Unicode characters that can cause issues in code, documents, and projects. The app is fully client-side and works in your browser - no data is sent anywhere.
 
 It should remove varius Invisible Unicode Characters in Code, Texts, etc.
 
