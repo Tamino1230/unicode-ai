@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(line => line.trim())
             .filter(line => line)
             .flatMap(line => {
-                if (line.includes('-') && line.startsWith('U+')) { // Range like U+FE00-U+FE0F
+                if (line.includes('-') && line.startsWith('U+')) { 
                     const parts = line.split('-');
                     if (parts.length === 2) {
                         const startHex = parts[0].substring(2);
@@ -105,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
             unicodeCharsTextarea.value = storedChars;
             currentUnicodeCharsToRemove = parseCharsString(storedChars);
         } else {
-            //* Populate textarea with default values if nothing is stored
             unicodeCharsTextarea.value = defaultUnicodeCharsToRemove.join('\n'); //* Use actual newline for display
             currentUnicodeCharsToRemove = getDefaultParsedChars();
         }
@@ -115,8 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const charsString = unicodeCharsTextarea.value;
         localStorage.setItem('unicodeCharsToRemove', charsString);
         currentUnicodeCharsToRemove = parseCharsString(charsString);
-        // alert('Character list saved!'); // Alert can be removed if auto-saving
-        // editCharsSidebar.classList.remove('open'); // Optionally close sidebar on save - let's keep it open for now
+        // alert('Character list saved!'); 
+        // editCharsSidebar.classList.remove('open'); 
     }
 
     //* Sidebar Event Listeners
@@ -138,9 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (resetCharsButton) {
         resetCharsButton.addEventListener('click', () => {
-            unicodeCharsTextarea.value = defaultUnicodeCharsToRemove.join('\n'); // Use actual newline for display
+            unicodeCharsTextarea.value = defaultUnicodeCharsToRemove.join('\n');
             currentUnicodeCharsToRemove = getDefaultParsedChars();
-            saveCharsToStorage(); //v Automatically save after reset
+            saveCharsToStorage(); 
             alert('Character list reset to default and saved!');
             //* editCharsSidebar.classList.remove('open'); // Keep sidebar open after reset for confirmation
         });
@@ -168,23 +167,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     projectUpload.addEventListener('change', (event) => {
         const files = Array.from(event.target.files);
+        // Robustly determine root folder: get first path segment for all files
+        let rootFolderName = null;
+        if (files.length > 0 && files[0].webkitRelativePath) {
+            // Get all first segments
+            const allFirstSegments = files.map(f => {
+                const relPath = f.webkitRelativePath;
+                if (!relPath) return null;
+                const firstSlash = relPath.indexOf('/');
+                if (firstSlash > 0) return relPath.substring(0, firstSlash);
+                return null;
+            }).filter(Boolean);
+            // If all files share the same first segment, that's the root
+            if (allFirstSegments.length > 0 && allFirstSegments.every(seg => seg === allFirstSegments[0])) {
+                rootFolderName = allFirstSegments[0];
+            }
+        }
+        // Detect if root folder starts with . or __
+        let rootIsDotOrUnderscore = false;
+        if (rootFolderName && (rootFolderName.startsWith('.') || rootFolderName.startsWith('__'))) {
+            rootIsDotOrUnderscore = true;
+        }
+        // Track dot/underscore folders for warning
+        let autoDeactivatedFolders = new Set();
         projectFilesData = files.map((file, index) => {
             const originalPath = file.webkitRelativePath || file.name;
-            const isSkipped = shouldSkipFile(originalPath);
+            const parts = originalPath.split(/[\\\/]/);
+            let skipType = false;
+            if (rootIsDotOrUnderscore && parts.length > 1) {
+                const subParts = parts.slice(1);
+                if (subParts.some(part => part.startsWith('.') && part.length > 1)) skipType = 'dotfolder';
+                else if (subParts.some(part => part.startsWith('__') && part.length > 2)) skipType = 'underscorefolder';
+            } else {
+                skipType = shouldSkipFile(originalPath, rootIsDotOrUnderscore);
+            }
+            let isSkipped = skipType === true;
+            let isDotOrUnderscoreFolder = skipType === 'dotfolder' || skipType === 'underscorefolder';
+            let autoDeactivatedFolder = null;
+            if (isDotOrUnderscoreFolder) {
+                const searchParts = (rootIsDotOrUnderscore && parts.length > 1) ? parts.slice(1) : parts;
+                autoDeactivatedFolder = searchParts.find(part => (part.startsWith('.') && part.length > 1) || (part.startsWith('__') && part.length > 2));
+                if (autoDeactivatedFolder) autoDeactivatedFolders.add(autoDeactivatedFolder);
+            }
             return {
                 file: file,
-                isActive: !isSkipped, //* Deactivate skipped files by default
+                isActive: !(isSkipped || isDotOrUnderscoreFolder),
                 id: `project-file-${index}`,
                 originalPath: originalPath,
-                cleanedTextContent: null, //* Will store cleaned text for this file
+                cleanedTextContent: null,
                 isSkipped: isSkipped,
-                details: isSkipped ? 'Skipped (binary/archive/media)' : ''
+                details: isSkipped ? 'Skipped (binary/archive/media)' : (isDotOrUnderscoreFolder ? 'dotfolder' : ''),
+                autoDeactivatedFolder: autoDeactivatedFolder
             };
         });
 
         if (projectFilesData.length > 0) {
             folderNameDisplay.textContent = `${projectFilesData.length} files selected`;
-            displayProjectFileStructure();
+            displayProjectFileStructure(autoDeactivatedFolders);
             inputText.value = ''; 
             projectProcessingProgressDiv.textContent = '';
         } else {
@@ -192,15 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
             projectFileStructureDiv.innerHTML = '';
             projectProcessingProgressDiv.textContent = '';
         }
-        resetOutputs(); //* Clear previous results when new project is loaded
+        resetOutputs();
         downloadProjectButton.style.display = 'none';
-        projectProgressBar.style.display = 'none'; //* Hide progress bar initially
+        projectProgressBar.style.display = 'none';
         projectProgressBar.value = 0;
     });
 
-    function shouldSkipFile(filePath) {
+    function shouldSkipFile(filePath, rootIsDotOrUnderscore = false) {
         const lowerPath = filePath.toLowerCase();
-        //* Common archive, binary, and media file extensions
         const skippedExtensions = [
             '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', 
             '.exe', '.dll', '.so', '.dylib', '.bin', '.app', '.msi', '.deb', '.rpm',
@@ -210,23 +248,60 @@ document.addEventListener('DOMContentLoaded', () => {
             '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
             '.iso', '.img', '.dmg'
         ];
-        return skippedExtensions.some(ext => lowerPath.endsWith(ext));
+        if (skippedExtensions.some(ext => lowerPath.endsWith(ext))) return true;
+        // #* Deactivate files in folders starting with a dot or __ (but allow re-enabling)
+        const parts = filePath.split(/[\\\/]/);
+        if (!rootIsDotOrUnderscore) {
+            if (parts.some(part => part.startsWith('.') && part.length > 1)) return 'dotfolder';
+            if (parts.some(part => part.startsWith('__') && part.length > 2)) return 'underscorefolder';
+        }
+        return false;
     }
 
-    function displayProjectFileStructure() {
-        projectFileStructureDiv.innerHTML = ''; //* Clear existing structure
+    function displayProjectFileStructure(autoDeactivatedFolders = new Set()) {
+        projectFileStructureDiv.innerHTML = '';
         if (projectFilesData.length === 0) return;
+        if (autoDeactivatedFolders.size > 0) {
+            const warnBox = document.createElement('div');
+            warnBox.className = 'dotfolder-warning';
+            warnBox.style.background = '#222';
+            warnBox.style.color = '#ffb300';
+            warnBox.style.border = '1px solid #444';
+            warnBox.style.marginBottom = '10px';
+            warnBox.style.padding = '8px 12px';
+            warnBox.style.borderRadius = '6px';
+            warnBox.style.fontWeight = 'bold';
+            warnBox.style.position = 'relative';
 
+            const header = document.createElement('div');
+            header.style.cursor = 'pointer';
+            header.innerHTML = `⚠️ Some folders were automatically deactivated (click to expand)`;
+            header.onclick = () => warnBox.classList.toggle('open');
+            warnBox.appendChild(header);
+
+            const content = document.createElement('div');
+            content.style.display = 'none';
+            content.style.fontWeight = 'normal';
+            content.style.marginTop = '8px';
+            content.innerHTML = '<b>Auto-deactivated folders:</b><ul style="margin:6px 0 0 18px;">' +
+                Array.from(autoDeactivatedFolders).map(f => `<li>${escapeHtml(f)}</li>`).join('') + '</ul>' +
+                '<div style="margin-top:6px;font-size:0.95em;">You can re-enable files from these folders by clicking them below.</div>';
+            warnBox.appendChild(content);
+
+            warnBox.addEventListener('click', (e) => {
+                if (e.target === header) {
+                    content.style.display = warnBox.classList.contains('open') ? 'block' : 'none';
+                }
+            });
+            projectFileStructureDiv.appendChild(warnBox);
+        }
         const ul = document.createElement('ul');
         projectFilesData.forEach(fileData => {
             const li = document.createElement('li');
             li.id = fileData.id;
-            
             const detailsSpan = fileData.isSkipped ? ` <span class="file-details">(${fileData.details})</span>` : '';
             li.innerHTML = `${escapeHtml(fileData.originalPath)}${detailsSpan}`;
-            
             li.title = fileData.isSkipped ? 'File type automatically skipped' : `Click to ${fileData.isActive ? 'deactivate' : 'activate'}`;
-            //* Apply classes for active/inactive state
             if (fileData.isSkipped) {
                 li.classList.add('skipped-file');
             } else if (fileData.isActive) {
@@ -237,11 +312,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.classList.remove('active-file');
             }
             li.style.cursor = fileData.isSkipped ? 'not-allowed' : 'pointer';
-
             if (!fileData.isSkipped) {
                 li.addEventListener('click', () => {
                     fileData.isActive = !fileData.isActive;
-                    // Update classes based on new state
                     if (fileData.isActive) {
                         li.classList.add('active-file');
                         li.classList.remove('inactive-file');
@@ -281,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadProjectButton.style.display = 'none';
             if (highlightedOutputTabButton) highlightedOutputTabButton.style.display = 'inline-block';
             if (cleanedOutputTabButton) cleanedOutputTabButton.style.display = 'inline-block';
-        } else { // project mode
+        } else { 
             normalModeInput.style.display = 'none';   //* Hide normal mode inputs
             projectModeInput.style.display = 'block'; //* Show project mode inputs
             downloadButton.style.display = 'none';
@@ -290,8 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
             //* In project mode, the "Cleaned Text/Output" tab might not be relevant for individual file content
             //* It will be used for the list of collapsible containers.
             //* "Highlighted Differences" will show the combined highlighted diffs.
-            if (highlightedOutputTabButton) highlightedOutputTabButton.style.display = 'inline-block'; // Or based on project processing state
-            if (cleanedOutputTabButton) cleanedOutputTabButton.style.display = 'inline-block'; // Or based on project processing state
+            if (highlightedOutputTabButton) highlightedOutputTabButton.style.display = 'inline-block'; 
+            if (cleanedOutputTabButton) cleanedOutputTabButton.style.display = 'inline-block';
         }
         //* Reset outputs when switching modes
         resetOutputs();
