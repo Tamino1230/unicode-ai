@@ -28,7 +28,7 @@ It should remove varius Invisible Unicode Characters in Code, Texts, etc.
 
 ## Screenshots
 
-<img src="assets/website.png" height="500px">
+<img src="assets/website.png" height="350px">
 
 ## Credits
 
