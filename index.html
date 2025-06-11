@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-AI Unicode Cleaner</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-header">
+                 <h1>Unicode-AI</h1>
+                 <p>Unicode Cleaner</p>
+            </div>
+
+            <div class="mode-selection-tabs">
+                <button class="mode-tab-button active" data-mode="normal">Normal Mode</button>
+                <button class="mode-tab-button" data-mode="project">Project Mode</button>
+            </div>
+
+            <section id="normalModeInput" class="input-controls active-mode-content">
+                <h2>Input (Single File/Text)</h2>
+                <textarea id="inputText" placeholder="Paste your text here or upload a single file..."></textarea>
+                <div class="file-input-area">
+                    <label for="fileUpload" class="file-upload-button">Upload Single File</label>
+                    <input type="file" id="fileUpload" accept=".txt, .html, .css, .js, .md, .csv, .log, .text, .py, .java, .c, .cpp, .php, .rb, .go, .rs, .swift, .kt, .pl, .sh, .bat, .xml, .json, .yaml, .ini, .cfg, .conf, .properties, .rtf, .srt, .vtt, .sub, .tex, .bib, .tsv, .psv, .textile, .org, .rst, .asciidoc, .adoc, .ad, .asc, .markdown, .mdown, .mkdn, .mkd, .mdwn, .mdtxt, .mdtext, .R, .Rmd, .sql, .diff, .patch, .err, .out, .tmp, .temp, .bak, .old, .orig, .sample, .example, .readme, .license, .copying, .authors, .contributors, .changelog, .news, .history, .version, .manifest, .description, .todo, .notes, .plan, .project, .ignore, .gitattributes, .gitmodules, .gitkeep, .gitconfig, .editorconfig, .babelrc, .eslintrc, .jshintrc, .csslintrc, .prettierrc, .stylelintrc, .browserslistrc, .npmrc, .yarnrc, .pnpmfile, .lock, .package-lock.json, .yarn.lock, .pnpm-lock.yaml, .env, .env.example, .env.local, .env.development, .env.production, .env.test, .env.staging, .env.template, .env.sample, .env.dist, .env.secret, .env.secrets, .env.prod, .env.dev, .env.test, .env.stage, .env.debug, .env.release, .env.default, .env.defaults, .env.example.local, .env.example.dev, .env.example.prod, .env.example.test, .env.example.stage, .env.example.debug, .env.example.release, .env.example.default, .env.example.defaults, .env.local.example, .env.dev.example, .env.prod.example, .env.test.example, .env.stage.example, .env.debug.example, .env.release.example, .env.default.example, .env.defaults.example, .env.local.template, .env.dev.template, .env.prod.template, .env.test.template, .env.stage.template, .env.debug.template, .env.release.template, .env.default.template, .env.defaults.template, .env.local.sample, .env.dev.sample, .env.prod.sample, .env.test.sample, .env.stage.sample, .env.debug.sample, .env.release.sample, .env.default.sample, .env.defaults.sample, .env.local.dist, .env.dev.dist, .env.prod.dist, .env.test.dist, .env.stage.dist, .env.debug.dist, .env.release.dist, .env.default.dist, .env.defaults.dist, .env.local.secret, .env.dev.secret, .env.prod.secret, .env.test.secret, .env.stage.secret, .env.debug.secret, .env.release.secret, .env.default.secret, .env.defaults.secret, .env.local.secrets, .env.dev.secrets, .env.prod.secrets, .env.test.secrets, .env.stage.secrets, .env.debug.secrets, .env.release.secrets, .env.default.secrets, .env.defaults.secrets, .env.local.prod, .env.local.dev, .env.local.test, .env.local.stage, .env.local.debug, .env.local.release, .env.local.default, .env.local.defaults, .env.prod.local, .env.dev.local, .env.test.local, .env.stage.local, .env.debug.local, .env.release.local, .env.default.local, .env.defaults.local, .env.prod.dev, .env.prod.test, .env.prod.stage, .env.prod.debug, .env.prod.release, .env.prod.default, .env.prod.defaults, .env.dev.prod, .env.dev.test, .env.dev.stage, .env.dev.debug, .env.dev.release, .env.dev.default, .env.dev.defaults, .env.test.prod, .env.test.dev, .env.test.stage, .env.test.debug, .env.test.release, .env.test.default, .env.test.defaults, .env.stage.prod, .env.stage.dev, .env.stage.test, .env.stage.debug, .env.stage.release, .env.stage.default, .env.stage.defaults, .env.debug.prod, .env.debug.dev, .env.debug.test, .env.debug.stage, .env.debug.release, .env.debug.default, .env.debug.defaults, .env.release.prod, .env.release.dev, .env.release.test, .env.release.stage, .env.release.debug, .env.release.default, .env.release.defaults, .env.default.prod, .env.default.dev, .env.default.test, .env.default.stage, .env.default.debug, .env.default.release, .env.default.defaults, .env.defaults.prod, .env.defaults.dev, .env.defaults.test, .env.defaults.stage, .env.defaults.debug, .env.defaults.release, .env.defaults.default">
+                    <span style="margin-bottom: 15px;" id="fileNameDisplay">No file chosen</span>
+                </div>
+            </section>
+
+            <section id="projectModeInput" class="input-controls">
+                <h2>Input (Project Folder)</h2>
+                <p>Upload an entire project folder. Files like ZIP, RAR, common binaries, and media types will be automatically skipped.</p>
+                <div class="file-input-area">
+                    <label for="projectUpload" class="file-upload-button">Upload Project Folder</label>
+                    <input type="file" id="projectUpload" webkitdirectory directory multiple>
+                    <span id="folderNameDisplay">No folder chosen</span>
+                </div>
+                <div id="projectProcessingProgress" class="processing-progress-display"></div>
+                <progress id="projectProgressBar" value="0" max="100" style="width: 100%; margin-top: 5px; display: none;"></progress>
+                <h4>File Structure (click to activate/deactivate):</h4>
+                <div id="projectFileStructure" class="project-files-display"></div>
+            </section>
+
+            <button id="cleanButton" class="action-button">Clean</button>
+            
+            <div class="app-footer">
+                <p>Based on <a class="owner-link" href="https://github.com/Tamino1230/unicode-ai-portable-version">PortableVersion</a> by <a class="owner-link" href="https://github.com/Tamino1230">Tamino1230</a></p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <button id="toggleEditCharsSidebarButton" class="action-button" title="Edit Removable Characters" style="position: fixed; top: 20px; right: 20px; z-index: 1001; width: 40px; height: 40px; padding: 0; font-size: 1.5em;">✏️</button>
+            <section class="output-display">
+                <div class="output-tabs">
+                    <button class="tab-button active" data-tab="highlightedOutput">Highlighted Differences</button>
+                    <button class="tab-button" data-tab="cleanedOutput">Cleaned Text/Output</button>
+                </div>
+                <div id="highlightedOutput" class="output-content-area active">
+                    <p class="placeholder-text">Differences will be shown here...</p>
+                </div>
+                <div id="cleanedOutput" class="output-content-area">
+                    <p class="placeholder-text">Cleaned text or project summary will appear here...</p>
+                </div>
+                <button id="downloadButton" class="action-button" style="display:none;">Download Cleaned File</button>
+                <button id="downloadProjectButton" class="action-button" style="display:none;">Download Cleaned Project as ZIP</button>
+            </section>
+
+            <section class="stats-display">
+                <h2>Cleaning Statistics</h2>
+                <div id="statsOutput">
+                    <p class="placeholder-text">Character removal statistics will appear here.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <!-- Added JSZip library -->
+    <script src="src/script.js"></script>
+
+<aside id="editCharsSidebar" class="edit-chars-sidebar">
+    <h3>Edit Removable Characters</h3>
+    <p>Enter each Unicode character or range (e.g., U+00AD or U+FE00-U+FE0F) on a new line.</p>
+    <textarea id="unicodeCharsTextarea" placeholder="Enter characters/ranges here..."></textarea>
+    <div class="sidebar-actions">
+        <button id="resetCharsButton" class="action-button">Reset to Default</button>
+        <button id="saveCharsButton" class="action-button">Save</button>
+    </div>
+</aside>
+
+</body>
+</html>
