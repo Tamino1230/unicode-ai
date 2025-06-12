@@ -217,7 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 '.mp3', '.wav', '.aac', '.ogg', '.flac',
                 '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.flv',
                 '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
-                '.iso', '.img', '.dmg', 'otf', 'ttf', '.woff', '.woff2', '.eot', '.svg', '.cpy'
+                '.iso', '.img', '.dmg', 'otf', 'ttf', '.woff', '.woff2', '.eot', '.svg', '.cpy', '.ase', 
+                '.blend', '.fbx', '.obj', '.stl', '.gltf', '.glb', '.dae', '.3ds', '.max', '.c4d', '.blend1', '.blend2', '.blend3', '.blend4', '.blend5', '.blend6', '.blend7', '.blend8', '.blend9',
+                '.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a', '.opus', '.wma', '.mid', '.midi',
+                '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.flv', '.webm', '.mpg', '.mpeg', '.3gp', '.m4v', '.ts'
             ];
             let isBinary = binaryExts.some(ext => lowerPath.endsWith(ext));
             if (isBinary) {

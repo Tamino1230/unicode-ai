@@ -632,3 +632,22 @@ input[type="file"] {
 .edit-chars-sidebar::-webkit-scrollbar-thumb:hover {
     background: #005fa3;
 }
+
+.output-tabs {
+    scrollbar-width: thin;
+    scrollbar-color: #007acc #252526;
+}
+
+.output-tabs::-webkit-scrollbar {
+    width: 8px;
+    background: #252526;
+}
+
+.output-tabs::-webkit-scrollbar-thumb {
+    background: #007acc;
+    border-radius: 4px;
+}
+
+.output-tabs::-webkit-scrollbar-thumb:hover {
+    background: #005fa3;
+}
