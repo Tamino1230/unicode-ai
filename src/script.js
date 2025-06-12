@@ -446,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalFilesToProcess = activeFilesToProcess.length;
         let currentFileLi = null; 
         let startTime = performance.now(); 
+        let hasProcessingError = false; // Flag to track errors
 
         cleanButton.disabled = true;
         projectProcessingProgressDiv.textContent = `Starting processing... 0/${totalFilesToProcess}`;
@@ -534,6 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 filesProcessedCount++;
             } catch (error) {
                 console.error(`Error processing file ${fileData.originalPath}:`, error);
+                hasProcessingError = true; // Set error flag
                 const errorMessage = `<p class="error-message">Error processing file: ${escapeHtml(error.message)}</p>`;
 
                 //* Add error to highlighted output section
@@ -592,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
         projectProcessingProgressDiv.textContent = `Processing complete. ${filesProcessedCount}/${totalFilesToProcess} active files processed in ${timeTaken}s.`;
         projectProgressBar.value = 100;
 
-        if (filesProcessedCount > 0) {
+        if (filesProcessedCount > 0 && !hasProcessingError) { // Check error flag here
             if (highlightedOutput.children.length === 0) {
                 highlightedOutput.innerHTML = '<p class="placeholder-text">No differences to show (or only errors occurred).</p>';
             }
@@ -609,8 +611,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cleanedOutput.children.length === 0) {
                  cleanedOutput.innerHTML = '<p class="placeholder-text">No active files were processed from the project.</p>';
             }
-            statsOutput.innerHTML = '<p class="placeholder-text">No statistics to show for active files.</p>';
-            downloadProjectButton.style.display = 'none';
+            if (hasProcessingError) {
+                statsOutput.innerHTML = '<p class="placeholder-text">Processing completed with errors. Statistics might be incomplete.</p>';
+            } else {
+                statsOutput.innerHTML = '<p class="placeholder-text">No statistics to show for active files.</p>';
+            }
+            downloadProjectButton.style.display = 'none'; // Ensure button is hidden if errors or no files
         }
     }
 
