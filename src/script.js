@@ -978,4 +978,40 @@ document.addEventListener('DOMContentLoaded', () => {
             chooseCharsModal.style.display = 'none';
         });
     }
+
+    const scrollToDownloadButton = document.getElementById('scrollToDownloadButton');
+    if (scrollToDownloadButton) {
+        scrollToDownloadButton.addEventListener('click', () => {
+            const projectBtn = document.getElementById('downloadProjectButton');
+            const singleBtn = document.getElementById('downloadButton');
+            let targetBtn = null;
+            if (projectBtn && projectBtn.style.display !== 'none' && !projectBtn.disabled) {
+                targetBtn = projectBtn;
+            } else if (singleBtn && singleBtn.style.display !== 'none' && !singleBtn.disabled) {
+                targetBtn = singleBtn;
+            }
+            if (targetBtn) {
+                targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetBtn.focus({ preventScroll: true });
+            }
+        });
+    }
+
+    const goToDownloadButton = document.getElementById('goToDownloadButton');
+    if (goToDownloadButton) {
+        goToDownloadButton.addEventListener('click', function () {
+            const projectBtn = document.getElementById('downloadProjectButton');
+            const singleBtn = document.getElementById('downloadButton');
+            let targetBtn = null;
+            if (projectBtn && projectBtn.style.display !== 'none' && !projectBtn.disabled) {
+                targetBtn = projectBtn;
+            } else if (singleBtn && singleBtn.style.display !== 'none' && !singleBtn.disabled) {
+                targetBtn = singleBtn;
+            }
+            if (targetBtn) {
+                targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetBtn.focus();
+            }
+        });
+    }
 });
