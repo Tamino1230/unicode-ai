@@ -650,14 +650,20 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const fileData of projectFilesData) {
             if (fileData.cleanedTextContent !== null) {
                 zip.file(fileData.originalPath, fileData.cleanedTextContent);
+            } else if (fileData.isSkipped === true) {
+                // Skipped/binary/media files: always add as original Blob
+                zip.file(fileData.originalPath, fileData.file);
             } else {
+                // Try as text, fallback to Blob, else error file
                 try {
-                    // Try to read as text, fallback to Blob if error
                     const text = await fileData.file.text();
                     zip.file(fileData.originalPath, text);
                 } catch (e) {
-                    // If even that fails, add an error file for this file
-                    zip.file(fileData.originalPath + '.error.txt', 'Error reading original file: ' + (e && e.message ? e.message : e));
+                    try {
+                        zip.file(fileData.originalPath, fileData.file);
+                    } catch (err) {
+                        zip.file(fileData.originalPath + '.error.txt', 'Error reading file: ' + (err && err.message ? err.message : err));
+                    }
                 }
             }
         }
