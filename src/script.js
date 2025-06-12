@@ -648,28 +648,27 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         if (!window.JSZip) {
             alert('JSZip library is not loaded. Cannot create ZIP.');
+            restoreButtonText();
             return;
         }
 
         if (projectFilesData.length === 0) {
             alert('No project files available to download.');
+            restoreButtonText();
             return;
         }
 
         const zip = new JSZip();
-        // Add all files, using cleaned content if available, otherwise original
         for (const fileData of projectFilesData) {
             if (fileData.cleanedTextContent !== null) {
                 zip.file(fileData.originalPath, fileData.cleanedTextContent);
             } else if (fileData.isSkipped === true) {
-                // Skipped/binary/media files: always add as original Blob (never as text!)
                 try {
                     zip.file(fileData.originalPath, fileData.file);
                 } catch (err) {
                     zip.file(fileData.originalPath + '.error.txt', 'Error adding binary file: ' + (err && err.message ? err.message : err));
                 }
             } else {
-                // Try as text, fallback to Blob, else error file
                 try {
                     const text = await fileData.file.text();
                     zip.file(fileData.originalPath, text);
@@ -683,7 +682,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Generate analysis file content (only for cleaned files)
         let analysisContent = `Unicode Cleaning Analysis - ${new Date().toLocaleString()}\n`;
         if (lastProjectProcessingTime) {
             analysisContent += `Processing time for this batch: ${lastProjectProcessingTime}s\n`;
@@ -747,10 +745,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                restoreButtonText();
             })
             .catch(err => {
                 console.error('Error generating ZIP file:', err);
                 alert('Error generating ZIP file: ' + err.message);
+                restoreButtonText();
             });
     });
 
@@ -797,7 +797,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[Unicode-AI][DEBUG] Keine Zeichen zum Entfernen gefunden.');
             return { cleanedText: text, highlightedHtml: escapeHtml(text), stats: {} };
         }
-        // Escape für Regex-CharClass
         const escapeForCharClass = c => c.replace(/[\\\]\[\-^]/g, r => '\\' + r);
         const charClass = filteredChars.map(escapeForCharClass).join('');
         const regex = new RegExp('[' + charClass + ']', 'g');
