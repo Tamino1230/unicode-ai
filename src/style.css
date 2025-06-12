@@ -471,33 +471,82 @@ input[type="file"] {
     background-color: #005fa3;
 }
 
-@media (max-width: 768px) {
-    .app-container {
-        flex-direction: column;
-        height: auto;
-        overflow: auto;
+/* --- Zeichen wählen Modal --- */
+.choose-chars-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30,30,30,0.85);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.choose-chars-content {
+    background: #252526;
+    border-radius: 8px;
+    padding: 24px 20px 18px 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    min-width: 320px;
+    max-width: 95vw;
+    min-height: 180px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.choose-chars-content h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #00aeff;
+    font-size: 1.15em;
+}
+.char-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 18px;
+    max-width: 340px;
+    max-height: 180px;
+    overflow-y: auto;
+    background: #222;
+    border-radius: 6px;
+    padding: 8px 4px;
+}
+.char-select-btn {
+    background: #222;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    font-size: 1.1em;
+    margin: 2px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border 0.15s;
+}
+.char-select-btn.selected {
+    background: #4CAF50;
+    color: #0cc553;
+    border: 2px solid #4CAF50;
+    font-weight: bold;
+}
+.choose-chars-content .action-button {
+    width: 120px;
+    margin: 6px 8px 0 8px;
+    display: inline-block;
+}
+@media (max-width: 600px) {
+    .choose-chars-content {
+        min-width: 90vw;
+        max-width: 98vw;
+        padding: 10px 2vw 10px 2vw;
     }
-    .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid #333333;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
-    .main-content {
-        padding: 15px;
-    }
-    textarea#inputText {
-        min-height: 150px;
-    }
-    .output-content-area {
-        min-height: 150px;
-    }
-    .logo-header h1 {
-        font-size: 1.8em;
-    }
-    .input-controls h2, .output-display h2, .stats-display h2 {
-        font-size: 1.2em;
+    .char-grid {
+        max-width: 95vw;
     }
 }
 

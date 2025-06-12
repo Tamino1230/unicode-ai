@@ -75,7 +75,7 @@
             </section>
         </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <!-- Added JSZip library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="src/script.js"></script>
 
 <aside id="editCharsSidebar" class="edit-chars-sidebar">
@@ -84,7 +84,16 @@
     <textarea id="unicodeCharsTextarea" placeholder="Enter characters/ranges here..."></textarea>
     <div class="sidebar-actions">
         <button id="resetCharsButton" class="action-button">Reset to Default</button>
+        <button id="chooseCharsButton" class="action-button">Choose Chars</button>
         <button id="saveCharsButton" class="action-button">Save</button>
+    </div>
+    <div id="chooseCharsModal" class="choose-chars-modal" style="display:none;">
+        <div class="choose-chars-content">
+            <h4>Choose Chars</h4>
+            <div id="charGrid" class="char-grid"></div>
+            <button id="addSelectedCharsButton" class="action-button">Add</button>
+            <button id="closeChooseCharsModal" class="action-button">Close</button>
+        </div>
     </div>
 </aside>
 

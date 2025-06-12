@@ -38,19 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastProjectProcessingTime = '';
 
     const defaultUnicodeCharsToRemove = [
-        '\\u200b', '\\u200c', '\\u200d', '\\uFEFF', '\\u2060', '\\u180E',
-        '\\u202A', '\\u202B', '\\u202C', '\\u202D', '\\u202E', '\\u00AD',
-        '\\u034F', '\\u061C', '\\u115F', '\\u1160', '\\u17B4', '\\u17B5',
-        '\\u180B', '\\u180C', '\\u180D', '\\uFE00', '\\uFE01', '\\uFE02',
-        '\\uFE03', '\\uFE04', '\\uFE05', '\\uFE06', '\\uFE07', '\\uFE08',
-        '\\uFE09', '\\uFE0A', '\\uFE0B', '\\uFE0C', '\\uFE0D', '\\uFE0E',
-        '\\uFE0F', '\\uFFF9', '\\uFFFA', '\\uFFFB'
+        '\u200b', '\u200c', '\u200d', '\uFEFF', '\u2060', '\u180E',
+        '\u202A', '\u202B', '\u202C', '\u202D', '\u202E', '\u00AD',
+        '\u034F', '\u061C', '\u115F', '\u1160', '\u17B4', '\u17B5',
+        '\u180B', '\u180C', '\u180D', '\uFE00', '\uFE01', '\uFE02',
+        '\uFE03', '\uFE04', '\uFE05', '\uFE06', '\uFE07', '\uFE08',
+        '\uFE09', '\uFE0A', '\uFE0B', '\uFE0C', '\uFE0D', '\uFE0E',
+        '\uFE0F', '\uFFF9', '\uFFFA', '\uFFFB', '\u202F'
     ];
 
     let currentUnicodeCharsToRemove = getDefaultParsedChars();
 
     function parseCharsString(charsString) {
-        return charsString.split(/\\r\\n|\\n|\\r/)
+        return charsString.split(/\r\n|\n|\r/)
             .map(line => line.trim())
             .filter(line => line)
             .flatMap(line => {
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     try {
-                        return JSON.parse(`"${line.replace(/"/g, '\\\\"')}"`);
+                        return JSON.parse('"' + line.replace(/"/g, '\\"') + '"');
                     } catch (e) {
                         return line;
                     }
@@ -137,11 +137,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (resetCharsButton) {
         resetCharsButton.addEventListener('click', () => {
-            unicodeCharsTextarea.value = defaultUnicodeCharsToRemove.join('\n');
+            // Schreibe nur die Unicode-Notation (U+....) als Text in das Textfeld
+            const defaultLines = defaultUnicodeCharsToRemove.map(c => {
+                const code = c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0');
+                return `U+${code}`;
+            });
+            unicodeCharsTextarea.value = defaultLines.join('\n');
             currentUnicodeCharsToRemove = getDefaultParsedChars();
             saveCharsToStorage(); 
             alert('Character list reset to default and saved!');
-            //* editCharsSidebar.classList.remove('open'); // Keep sidebar open after reset for confirmation
+            // editCharsSidebar.classList.remove('open'); // Keep sidebar open after reset for confirmation
         });
     }
 
@@ -167,10 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     projectUpload.addEventListener('change', (event) => {
         const files = Array.from(event.target.files);
-        // Robustly determine root folder: get first path segment for all files
         let rootFolderName = null;
         if (files.length > 0 && files[0].webkitRelativePath) {
-            // Get all first segments
             const allFirstSegments = files.map(f => {
                 const relPath = f.webkitRelativePath;
                 if (!relPath) return null;
@@ -178,17 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (firstSlash > 0) return relPath.substring(0, firstSlash);
                 return null;
             }).filter(Boolean);
-            // If all files share the same first segment, that's the root
             if (allFirstSegments.length > 0 && allFirstSegments.every(seg => seg === allFirstSegments[0])) {
                 rootFolderName = allFirstSegments[0];
             }
         }
-        // Detect if root folder starts with . or __
         let rootIsDotOrUnderscore = false;
         if (rootFolderName && (rootFolderName.startsWith('.') || rootFolderName.startsWith('__'))) {
             rootIsDotOrUnderscore = true;
         }
-        // Track dot/underscore folders for warning
         let autoDeactivatedFolders = new Set();
         projectFilesData = files.map((file, index) => {
             const originalPath = file.webkitRelativePath || file.name;
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 '.mp3', '.wav', '.aac', '.ogg', '.flac',
                 '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.flv',
                 '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
-                '.iso', '.img', '.dmg'
+                '.iso', '.img', '.dmg', 'otf', 'ttf', '.woff', '.woff2', '.eot', '.svg', '.cpy'
             ];
             let isBinary = binaryExts.some(ext => lowerPath.endsWith(ext));
             if (isBinary) {
@@ -750,41 +750,39 @@ document.addEventListener('DOMContentLoaded', () => {
     function cleanUnicodeChars(text, charsToRemove) {
         let cleanedText = text;
         let stats = {};
-        charsToRemove.forEach(char => { stats[char] = 0; });
+        // Filter out empty, whitespace, oder ungültige Einträge
+        const filteredChars = (charsToRemove || []).map(c => typeof c === 'string' ? c.trim() : '').filter(c => c && c.length > 0);
+        console.log('[Unicode-AI][DEBUG] filteredChars:', filteredChars);
+        filteredChars.forEach(char => { stats[char] = 0; });
         let highlightedHtml = '';
-        const escapedChars = charsToRemove.map(c => c.replace(/[.*+?^${}()|[\\\]]/g, '\\$&'));
-        const regex = new RegExp(`(${escapedChars.join('|')})`, 'g');
+        if (filteredChars.length === 0) {
+            console.log('[Unicode-AI][DEBUG] Keine Zeichen zum Entfernen gefunden.');
+            return { cleanedText: text, highlightedHtml: escapeHtml(text), stats: {} };
+        }
+        // Escape für Regex-CharClass
+        const escapeForCharClass = c => c.replace(/[\\\]\[\-^]/g, r => '\\' + r);
+        const charClass = filteredChars.map(escapeForCharClass).join('');
+        const regex = new RegExp('[' + charClass + ']', 'g');
+        console.log('[Unicode-AI][DEBUG] Regex:', regex);
         let match;
         let lastIndex = 0;
-        // Build highlighted HTML
+        let removedChars = [];
         while ((match = regex.exec(text)) !== null) {
             const foundChar = match[0];
+            removedChars.push(foundChar);
             highlightedHtml += escapeHtml(text.substring(lastIndex, match.index));
-            highlightedHtml += `<span class="highlight-removed" title="Removed: U+${foundChar.charCodeAt(0).toString(16).padStart(4, '0')}">${escapeHtml(foundChar)}</span>`;
+            highlightedHtml += `<span class=\"highlight-removed\" title=\"Removed: U+${foundChar.charCodeAt(0).toString(16).padStart(4, '0')}\">${escapeHtml(foundChar)}</span>`;
             lastIndex = regex.lastIndex;
-            stats[foundChar] = (stats[foundChar] || 0) + 1;
+            if (stats.hasOwnProperty(foundChar)) stats[foundChar] = (stats[foundChar] || 0) + 1;
         }
         highlightedHtml += escapeHtml(text.substring(lastIndex));
-
-        //* Build cleaned text by removing characters
-        //* Iterate over a copy of charsToRemove for safe modification if needed in future, though not currently modifying.
-        [...charsToRemove].forEach(char => {
-            cleanedText = cleanedText.split(char).join('');
-        });
-        
-        //* If no characters were removed, the highlighted HTML should be the original escaped text.
-        //* This check needs to be more robust: check if any char *actually in charsToRemove* was found.
-        let wasCharRemoved = false;
-        for (const char of charsToRemove) {
-            if (stats[char] > 0) {
-                wasCharRemoved = true;
-                break;
-            }
-        }
+        cleanedText = text.replace(regex, '');
+        let wasCharRemoved = Object.values(stats).some(v => v > 0);
         if (!wasCharRemoved) {
             highlightedHtml = escapeHtml(text);
         }
-
+        console.log('[Unicode-AI][DEBUG] removedChars:', removedChars);
+        console.log('[Unicode-AI][DEBUG] cleanedText:', cleanedText);
         return { cleanedText, highlightedHtml, stats };
     }
 
@@ -872,4 +870,74 @@ document.addEventListener('DOMContentLoaded', () => {
     switchMode('normal'); 
     switchTab('highlightedOutput');
 
+    // --- Zeichen wählen Modal ---
+    const chooseCharsButton = document.getElementById('chooseCharsButton');
+    const chooseCharsModal = document.getElementById('chooseCharsModal');
+    const charGrid = document.getElementById('charGrid');
+    const addSelectedCharsButton = document.getElementById('addSelectedCharsButton');
+    const closeChooseCharsModal = document.getElementById('closeChooseCharsModal');
+
+    // Zeichenliste: Buchstaben (A-Z, a-z), Zahlen (0-9)
+    const selectableChars = [];
+    for (let i = 65; i <= 90; i++) selectableChars.push(String.fromCharCode(i)); // A-Z
+    for (let i = 97; i <= 122; i++) selectableChars.push(String.fromCharCode(i)); // a-z
+    // for (let i = 48; i <= 57; i++) selectableChars.push(String.fromCharCode(i)); // 0-9
+
+    function renderCharGrid() {
+        charGrid.innerHTML = '';
+        selectableChars.forEach(char => {
+            const btn = document.createElement('button');
+            btn.textContent = char;
+            btn.className = 'char-select-btn';
+            btn.style.margin = '2px';
+            btn.style.width = '32px';
+            btn.style.height = '32px';
+            btn.style.fontSize = '1.1em';
+            btn.style.borderRadius = '4px';
+            btn.style.border = '1px solid #444';
+            btn.style.background = '#222';
+            btn.style.color = '#fff';
+            btn.style.cursor = 'pointer';
+            btn.setAttribute('data-char', char);
+            btn.onclick = () => {
+                btn.classList.toggle('selected');
+                if (btn.classList.contains('selected')) {
+                    btn.style.background = '#4CAF50';
+                    btn.style.border = '2px solid #4CAF50';
+                } else {
+                    btn.style.background = '#222';
+                    btn.style.border = '1px solid #444';
+                }
+            };
+            charGrid.appendChild(btn);
+        });
+    }
+
+    if (chooseCharsButton && chooseCharsModal) {
+        chooseCharsButton.addEventListener('click', () => {
+            renderCharGrid();
+            chooseCharsModal.style.display = 'block';
+        });
+    }
+    if (closeChooseCharsModal) {
+        closeChooseCharsModal.addEventListener('click', () => {
+            chooseCharsModal.style.display = 'none';
+        });
+    }
+    if (addSelectedCharsButton) {
+        addSelectedCharsButton.addEventListener('click', () => {
+            const selected = Array.from(charGrid.querySelectorAll('.selected')).map(btn => btn.getAttribute('data-char'));
+            if (selected.length > 0) {
+                // Unicode Notation (U+....)
+                const lines = unicodeCharsTextarea.value.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+                selected.forEach(char => {
+                    const code = char.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0');
+                    const uStr = `U+${code}`;
+                    if (!lines.includes(uStr)) lines.push(uStr);
+                });
+                unicodeCharsTextarea.value = lines.join('\n');
+            }
+            chooseCharsModal.style.display = 'none';
+        });
+    }
 });
