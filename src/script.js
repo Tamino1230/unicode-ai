@@ -651,13 +651,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fileData.cleanedTextContent !== null) {
                 zip.file(fileData.originalPath, fileData.cleanedTextContent);
             } else {
-                // Add original file (as text if possible, otherwise as Blob)
                 try {
                     // Try to read as text, fallback to Blob if error
                     const text = await fileData.file.text();
                     zip.file(fileData.originalPath, text);
                 } catch (e) {
-                    zip.file(fileData.originalPath, fileData.file);
+                    // If even that fails, add an error file for this file
+                    zip.file(fileData.originalPath + '.error.txt', 'Error reading original file: ' + (e && e.message ? e.message : e));
                 }
             }
         }
