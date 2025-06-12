@@ -655,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
         analysisContent += `--- Per-File Analysis ---\n\n`;
 
         let aggregatedAnalysisStats = {};
-        unicodeCharsToRemove.forEach(char => aggregatedAnalysisStats[char] = 0);
+        currentUnicodeCharsToRemove.forEach(char => aggregatedAnalysisStats[char] = 0); // Changed unicodeCharsToRemove to currentUnicodeCharsToRemove
         let totalRemovedInAnalysis = 0;
 
         activeCleanedFiles.forEach(fileData => {
@@ -936,6 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!lines.includes(uStr)) lines.push(uStr);
                 });
                 unicodeCharsTextarea.value = lines.join('\n');
+                saveCharsToStorage(); //* Update
             }
             chooseCharsModal.style.display = 'none';
         });
