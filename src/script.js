@@ -638,6 +638,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     downloadProjectButton.addEventListener('click', async () => {
+        downloadProjectButton.disabled = true;
+        const originalText = downloadProjectButton.textContent;
+        downloadProjectButton.textContent = 'Loading...';
+        // Restore button text after download finishes
+        const restoreButtonText = () => {
+            downloadProjectButton.textContent = originalText;
+            downloadProjectButton.disabled = false;
+        };
         if (!window.JSZip) {
             alert('JSZip library is not loaded. Cannot create ZIP.');
             return;
