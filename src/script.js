@@ -654,8 +654,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fileData.cleanedTextContent !== null) {
                 zip.file(fileData.originalPath, fileData.cleanedTextContent);
             } else if (fileData.isSkipped === true) {
-                // Skipped/binary/media files: always add as original Blob
-                zip.file(fileData.originalPath, fileData.file);
+                // Skipped/binary/media files: always add as original Blob (never as text!)
+                try {
+                    zip.file(fileData.originalPath, fileData.file);
+                } catch (err) {
+                    zip.file(fileData.originalPath + '.error.txt', 'Error adding binary file: ' + (err && err.message ? err.message : err));
+                }
             } else {
                 // Try as text, fallback to Blob, else error file
                 try {
