@@ -634,37 +634,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    downloadProjectButton.addEventListener('click', () => {
+    downloadProjectButton.addEventListener('click', async () => {
         if (!window.JSZip) {
             alert('JSZip library is not loaded. Cannot create ZIP.');
             return;
         }
 
-        const activeCleanedFiles = projectFilesData.filter(fd => fd.isActive && fd.cleanedTextContent !== null && !fd.isSkipped);
-
-        if (activeCleanedFiles.length === 0) {
-            alert('No active and successfully cleaned files to include in the ZIP.');
+        if (projectFilesData.length === 0) {
+            alert('No project files available to download.');
             return;
         }
 
         const zip = new JSZip();
-        activeCleanedFiles.forEach(fileData => {
-            zip.file(fileData.originalPath, fileData.cleanedTextContent);
-        });
+        // Add all files, using cleaned content if available, otherwise original
+        for (const fileData of projectFilesData) {
+            if (fileData.cleanedTextContent !== null) {
+                zip.file(fileData.originalPath, fileData.cleanedTextContent);
+            } else {
+                // Add original file (as text if possible, otherwise as Blob)
+                try {
+                    // Try to read as text, fallback to Blob if error
+                    const text = await fileData.file.text();
+                    zip.file(fileData.originalPath, text);
+                } catch (e) {
+                    zip.file(fileData.originalPath, fileData.file);
+                }
+            }
+        }
 
-        //* Generate analysis file content
+        // Generate analysis file content (only for cleaned files)
         let analysisContent = `Unicode Cleaning Analysis - ${new Date().toLocaleString()}\n`;
         if (lastProjectProcessingTime) {
             analysisContent += `Processing time for this batch: ${lastProjectProcessingTime}s\n`;
         }
-        analysisContent += `Total files processed and included in ZIP: ${activeCleanedFiles.length}\n\n`;
+        const cleanedFiles = projectFilesData.filter(fd => fd.cleanedTextContent !== null && !fd.isSkipped);
+        analysisContent += `Total files cleaned and included in ZIP: ${cleanedFiles.length}\n\n`;
         analysisContent += `--- Per-File Analysis ---\n\n`;
 
         let aggregatedAnalysisStats = {};
-        currentUnicodeCharsToRemove.forEach(char => aggregatedAnalysisStats[char] = 0); // Changed unicodeCharsToRemove to currentUnicodeCharsToRemove
+        currentUnicodeCharsToRemove.forEach(char => aggregatedAnalysisStats[char] = 0);
         let totalRemovedInAnalysis = 0;
 
-        activeCleanedFiles.forEach(fileData => {
+        cleanedFiles.forEach(fileData => {
             analysisContent += `File: ${escapeHtml(fileData.originalPath)}\n`;
             if (fileData.stats) {
                 let fileSpecificCharsFound = false;
@@ -686,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 analysisContent += `  - Statistics not available for this file (should have been processed).\n`;
             }
-            analysisContent += `\n`; // Add a newline for better readability between files
+            analysisContent += `\n`;
         });
         
         analysisContent += `--- Aggregated Summary ---\n`;
@@ -701,24 +712,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!foundCharsInAggregatedSummary) {
             analysisContent += `  No targeted Unicode characters were found or removed in the processed files.\n`;
         }
-        analysisContent += `\nTotal targeted characters removed across all files: ${totalRemovedInAnalysis}\n`;
+        analysisContent += `\nTotal targeted characters removed across all cleaned files: ${totalRemovedInAnalysis}\n`;
 
-        zip.file(".noai-analyse", analysisContent);
+        zip.file('.noai-analyse', analysisContent);
 
-        zip.generateAsync({ type: "blob" })
+        zip.generateAsync({ type: 'blob' })
             .then(function(content) {
                 const url = URL.createObjectURL(content);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "cleaned_project.zip";
+                a.download = 'cleaned_project.zip';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             })
             .catch(err => {
-                console.error("Error generating ZIP file:", err);
-                alert("Error generating ZIP file: " + err.message);
+                console.error('Error generating ZIP file:', err);
+                alert('Error generating ZIP file: ' + err.message);
             });
     });
 
