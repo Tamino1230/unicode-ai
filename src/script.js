@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '\uFE03', '\uFE04', '\uFE05', '\uFE06', '\uFE07', '\uFE08',
         '\uFE09', '\uFE0A', '\uFE0B', '\uFE0C', '\uFE0D', '\uFE0E',
         '\uFE0F', '\uFFF9', '\uFFFA', '\uFFFB', '\u202F'
-    ];
+    ]; // '\u000D', '\u000A' (für zeilenumbruch)
 
     let currentUnicodeCharsToRemove = getDefaultParsedChars();
 
